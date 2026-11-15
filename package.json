@@ -1,0 +1,7 @@
+{
+  "name": "vaasan-elainsuoja",
+  "private": true,
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "graphql": "^16.9.0", "graphql-yoga": "^5.6.0", "pg": "^8.12.0" }
+}

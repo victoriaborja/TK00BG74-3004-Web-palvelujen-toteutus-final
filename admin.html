@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hakemukset – Vaasan Eläinsuoja ry</title>
+<style>
+:root{--bg:#F6F1E7;--card:#FBF8F1;--ink:#23302A;--mut:#5C6A60;--forest:#2F4A3A;--line:#E0D8C6;--terra:#B8643F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;padding:32px 20px}
+main{max-width:1100px;margin:0 auto}
+h1{margin:0 0 6px;font-size:2rem}
+p{color:var(--mut);margin:0 0 20px}
+form{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+input{font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);min-width:240px}
+button{font:inherit;font-weight:600;padding:12px 22px;border:0;border-radius:99px;background:var(--forest);color:#F6F1E7;cursor:pointer}
+button:hover{background:var(--terra)}
+.err{color:#B3361F;margin-bottom:16px}
+.wrap{overflow-x:auto;background:var(--card);border-radius:20px}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.85rem;color:var(--mut)}
+tr:last-child td{border-bottom:0}
+a{color:var(--forest)}
+</style>
+</head>
+<body>
+<main>
+<h1>Adoptiohakemukset</h1>
+<p>Vain henkilökunnalle. <a href="/">Takaisin sivustolle</a></p>
+<form id="f"><input id="pw" type="password" placeholder="Salasana" aria-label="Salasana" autocomplete="current-password"><button type="submit">Näytä hakemukset</button></form>
+<div class="err" id="e" role="alert"></div>
+<div class="wrap" id="w" hidden><table><thead><tr><th>Aika</th><th>Eläin</th><th>Nimi</th><th>Sähköposti</th><th>Puhelin</th><th>Lisätietoja</th></tr></thead><tbody id="b"></tbody></table></div>
+<p id="n" hidden>Ei vielä hakemuksia.</p>
+</main>
+<script>
+const Q='{adoptions{id animalName fullName email phone message createdAt}}';
+document.getElementById('f').onsubmit=async e=>{
+  e.preventDefault();
+  const err=document.getElementById('e'),w=document.getElementById('w'),n=document.getElementById('n'),b=document.getElementById('b');
+  err.textContent='';w.hidden=true;n.hidden=true;b.textContent='';
+  try{
+    const r=await fetch('/graphql',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Basic '+btoa('admin:'+document.getElementById('pw').value)},body:JSON.stringify({query:Q})});
+    const j=await r.json();
+    if(j.errors){err.textContent=j.errors[0].extensions&&j.errors[0].extensions.code==='UNAUTHORIZED'?'Väärä salasana.':'Haku epäonnistui.';return}
+    const rows=j.data.adoptions;
+    if(!rows.length){n.hidden=false;return}
+    for(const a of rows){
+      const tr=document.createElement('tr');
+      for(const v of [new Date(a.createdAt.replace(' ','T')+'Z').toLocaleString('fi-FI'),a.animalName,a.fullName,a.email,a.phone,a.message]){
+        const td=document.createElement('td');td.textContent=v;tr.appendChild(td)
+      }
+      b.appendChild(tr)
+    }
+    w.hidden=false
+  }catch(x){err.textContent='Palvelimeen ei saatu yhteyttä.'}
+};
+</script>
+</body>
+</html>
